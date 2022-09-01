@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 import 'package:csv/csv.dart';
 import 'package:flutter/services.dart' show rootBundle;
@@ -88,6 +89,7 @@ class _CalenderPageState extends State<CalenderPage> {
                     appointmentTextStyle: TextStyle(
                       color: Colors.white,
                       fontStyle: FontStyle.normal,
+                      decoration: TextDecoration.underline,
                     ),
                   ),
                 ),
@@ -208,6 +210,7 @@ class _CalenderPageState extends State<CalenderPage> {
           ),
           isAllDay: true,
           color: getColor(type),
+          subject: type,
           recurrenceRule: 'FREQ=WEEKLY;BYDAY=$freq',
         ),
       );
