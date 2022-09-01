@@ -1,6 +1,10 @@
+// import 'package:flutter/cupertino.dart';
+import 'package:calender/widgets/calender_sample.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
+import 'package:csv/csv.dart';
+import 'package:flutter/services.dart' show rootBundle;
 
 class CalenderPage extends StatefulWidget {
   const CalenderPage({Key? key}) : super(key: key);
@@ -10,29 +14,14 @@ class CalenderPage extends StatefulWidget {
 }
 
 class _CalenderPageState extends State<CalenderPage> {
-  List<Appointment> selectedEvents = [];
-  DateFormat customDateFormat = DateFormat('yyyy-MM-dd');
-  DateTime selectedDay =
-      DateFormat('yyyy-MM-dd').parse(DateTime.now().toString());
-  final GlobalKey<FormState> keyGlobal = GlobalKey<FormState>();
-  String? selectedWasteType;
-  var isRecyclable = false;
-  FocusNode submitFocusNode = FocusNode();
+  List<Appointment> eventsData = [];
+  List<Map<String, dynamic>> fromCsvMapped = [];
+  String? selectedValue;
 
-  List<String> wasteCategory = [
-    'Recyclables Waste',
-    'General Waste',
-  ];
-
-  List<String> houseNo = [
-    '01',
-    '02',
-  ];
-
-  List<Appointment> getEventsFromDay() {
-    return selectedEvents
-        .where((element) => element.startTime == selectedDay)
-        .toList();
+  @override
+  void initState() {
+    super.initState();
+    loadAsset();
   }
 
   @override
@@ -41,49 +30,49 @@ class _CalenderPageState extends State<CalenderPage> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).primaryColor,
         title: const Text('Calender Events'),
-        centerTitle: true,
       ),
       body: Container(
         padding: const EdgeInsets.fromLTRB(10, 20, 10, 10),
         child: Column(
           children: [
-            Form(
-              child: DropdownButtonFormField(
-                hint: const Text('choose house no.'),
-                decoration: const InputDecoration(
-                  border: InputBorder.none,
-                ),
-                items: houseNo
-                    .map(
-                      (no) => DropdownMenuItem(
-                        value: no,
-                        child: Text(no),
-                      ),
-                    )
-                    .toList(),
-                onChanged: (value) {},
+            DropdownButtonFormField(
+              hint: const Text('choose house no.'),
+              decoration: const InputDecoration(
+                border: InputBorder.none,
               ),
+              value: selectedValue,
+              items: fromCsvMapped
+                  .map(
+                    (houseNo) => DropdownMenuItem(
+                      value: houseNo['House no.'],
+                      child: Text(houseNo['House no.']),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (value) {
+                setState(() {
+                  if (value != null) {
+                    eventsData = [];
+                    debugPrint('selected value......!!!$value');
+                    selectedValue = value.toString();
+                    allEvents(fromCsvMapped, selectedValue!);
+                  }
+                });
+              },
             ),
             Expanded(
               child: SfCalendar(
                 todayHighlightColor: Theme.of(context).primaryColor,
                 selectionDecoration: BoxDecoration(
-                  shape: BoxShape.circle,
+                  // shape: BoxShape.circle,
                   border: Border.all(
                     color: Colors.deepOrange,
                     width: 2,
                   ),
                 ),
-                onTap: (details) {
-                  setState(() {
-                    selectedDay =
-                        customDateFormat.parse(details.date.toString());
-                  });
-                },
-                view: CalendarView.month,
                 initialDisplayDate: DateTime.now(),
                 initialSelectedDate: DateTime.now(),
-                cellBorderColor: Colors.transparent,
+                // cellBorderColor: Colors.transparent,
                 backgroundColor: Colors.white,
                 todayTextStyle: const TextStyle(color: Colors.black),
                 viewHeaderStyle: const ViewHeaderStyle(
@@ -93,151 +82,149 @@ class _CalenderPageState extends State<CalenderPage> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                headerStyle: const CalendarHeaderStyle(
-                  textAlign: TextAlign.center,
-                ),
+                headerStyle:
+                    const CalendarHeaderStyle(textAlign: TextAlign.center),
                 monthViewSettings: const MonthViewSettings(
-                  appointmentDisplayMode: MonthAppointmentDisplayMode.indicator,
-                  appointmentDisplayCount: 10,
-                ),
-                dataSource: EventDataSource(selectedEvents),
-              ),
-            ),
-            Expanded(
-              child: ListView(
-                children: [
-                  ...getEventsFromDay().map(
-                    (event) => Container(
-                      padding: const EdgeInsets.all(5.0),
-                      child: Card(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: ListTile(
-                          leading: Icon(
-                            Icons.recycling_outlined,
-                            color: event.color,
-                          ),
-                          title: Text(
-                            event.subject,
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: event.color,
-                            ),
-                          ),
-                          subtitle: const Text('12:30 PM'),
-                        ),
-                      ),
+                  showAgenda: true,
+                  agendaItemHeight: 50,
+                  agendaStyle: AgendaStyle(
+                    appointmentTextStyle: TextStyle(
+                      color: Colors.white,
+                      fontStyle: FontStyle.normal,
                     ),
                   ),
-                ],
+                ),
+                view: CalendarView.month,
+                dataSource: MeetingDataSource(eventsData),
               ),
             ),
+            // Expanded(
+            //   child: ListView.separated(
+            //     itemCount: appointmentDetails!.length,
+            //     itemBuilder: (context, index) {
+            //       return Container(
+            //         padding: const EdgeInsets.all(5.0),
+            //         child: Card(
+            //           shape: RoundedRectangleBorder(
+            //             borderRadius: BorderRadius.circular(20),
+            //           ),
+            //           child: ListTile(
+            //             leading: Icon(
+            //               Icons.recycling_outlined,
+            //               color: appointmentDetails![index].color,
+            //             ),
+            //             title: Text(
+            //               appointmentDetails![index].subject,
+            //               style: TextStyle(
+            //                 fontSize: 18,
+            //                 color: appointmentDetails![index].color,
+            //               ),
+            //             ),
+            //           ),
+            //         ),
+            //       );
+            //     },
+            //     separatorBuilder: (BuildContext context, int index) =>
+            //         const Divider(height: 5),
+            //   ),
+            // ),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(
-                Radius.circular(20.0),
-              ),
-            ),
-            title: const Text('Add Event'),
-            content: Container(
-              constraints: const BoxConstraints(
-                maxHeight: 50,
-              ),
-              child: Form(
-                key: keyGlobal,
-                child: Column(
-                  children: [
-                    DropdownButtonFormField(
-                      hint: const Text('Choose type of waste'),
-                      decoration: const InputDecoration(
-                        border: InputBorder.none,
-                      ),
-                      items: wasteCategory
-                          .map(
-                            (item) => DropdownMenuItem(
-                              value: item,
-                              child: Text(item),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          selectedWasteType = value.toString();
-                          if (selectedWasteType == 'Recyclables Waste') {
-                            isRecyclable = true;
-                          } else {
-                            isRecyclable = false;
-                          }
-                        });
-                      },
-                      onTap: () {
-                        FocusScope.of(context).requestFocus(submitFocusNode);
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text(
-                  'cancel',
-                  style: TextStyle(
-                    color: Colors.deepOrangeAccent,
-                  ),
-                ),
-              ),
-              TextButton(
-                focusNode: submitFocusNode,
-                onPressed: () => submit(selectedDay),
-                child: const Text(
-                  'ok',
-                  style: TextStyle(
-                    color: Colors.deepOrangeAccent,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        label: const Text('add Event'),
-        icon: const Icon(Icons.add),
-        backgroundColor: Theme.of(context).primaryColor,
       ),
     );
   }
 
-  void submit(DateTime date) {
-    if (selectedWasteType!.isEmpty) {
-      return;
+  Future<void> loadAsset() async {
+    List rawDataFromCSV = [];
+
+    final myData =
+        await rootBundle.loadString("assets/Operations Schedule to upload.csv");
+    List<List<dynamic>> csvTable = const CsvToListConverter().convert(myData);
+
+    rawDataFromCSV = csvTable;
+    for (var i = 1; i < rawDataFromCSV.length; i++) {
+      var row = rawDataFromCSV[i];
+      Map<String, dynamic> houseData = {};
+
+      houseData['House no.'] = row[0];
+      houseData['Waste'] = row[1];
+      houseData['Organic'] = row[2];
+      houseData['Recycle'] = row[3];
+
+      fromCsvMapped.add(houseData);
+    }
+
+    selectedValue = 'I-501 M';
+    allEvents(fromCsvMapped, selectedValue!);
+    setState(() {});
+  }
+
+  void allEvents(List<Map<String, dynamic>> data, String houseNo) {
+    for (var e in data) {
+      if (e['House no.'] == houseNo) {
+        String wasteDay = e['Waste']!;
+        String organicDay = e['Organic']!;
+        String recycleDay = e['Recycle']!;
+
+        addEvents(wasteDay.trim(), 'Waste');
+        addEvents(organicDay.trim(), 'Organic');
+        addEvents(recycleDay.trim(), 'Recycle');
+      }
+    }
+  }
+
+  void addEvents(String parameter, String type) {
+    if (parameter == 'Daily') {
+      allAppointmentsAdd(parameter.toUpperCase(), type);
+    } else if (parameter.contains(',')) {
+      List<String> concatilateList = [];
+      for (var element in parameter.split(',')) {
+        concatilateList.add(element.trim().toUpperCase().substring(0, 2));
+      }
+      String concValue = concatilateList.join(',');
+      allAppointmentsAdd(concValue, type);
     } else {
-      selectedEvents.add(
+      allAppointmentsAdd(parameter.trim().toUpperCase().substring(0, 2), type);
+    }
+  }
+
+  void allAppointmentsAdd(String freq, String type) {
+    if (freq == 'DAILY') {
+      eventsData.add(
         Appointment(
-          startTime: date,
-          endTime: date,
-          subject: selectedWasteType.toString(),
+          startTime: DateTime.now(),
+          endTime: DateTime.now().add(
+            const Duration(hours: 2),
+          ),
+          subject: type,
           isAllDay: true,
-          color: isRecyclable ? Colors.deepOrangeAccent : Colors.green,
+          color: getColor(type),
+          recurrenceRule: 'FREQ=$freq',
+        ),
+      );
+    } else {
+      eventsData.add(
+        Appointment(
+          startTime: DateTime.now(),
+          endTime: DateTime.now().add(
+            const Duration(hours: 2),
+          ),
+          isAllDay: true,
+          color: getColor(type),
+          recurrenceRule: 'FREQ=WEEKLY;BYDAY=$freq',
         ),
       );
     }
-
-    setState(() {});
-    Navigator.pop(context);
-    return;
   }
-}
 
-class EventDataSource extends CalendarDataSource {
-  EventDataSource(List<Appointment> source) {
-    appointments = source;
+  Color getColor(String type) {
+    if (type == 'Waste') {
+      return Colors.red;
+    } else if (type == 'Organic') {
+      return Colors.green;
+    } else if (type == 'Recycle') {
+      return Colors.blue;
+    }
+    return Colors.black;
   }
 }
