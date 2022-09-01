@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 import 'package:csv/csv.dart';
 import 'package:flutter/services.dart' show rootBundle;
@@ -33,30 +32,33 @@ class _CalenderPageState extends State<CalenderPage> {
         padding: const EdgeInsets.fromLTRB(10, 20, 10, 10),
         child: Column(
           children: [
-            DropdownButtonFormField(
-              hint: const Text('choose house no.'),
-              decoration: const InputDecoration(
-                border: InputBorder.none,
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: DropdownButtonFormField(
+                hint: const Text('choose house no.'),
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                ),
+                value: selectedValue,
+                items: fromCsvMapped
+                    .map(
+                      (houseNo) => DropdownMenuItem(
+                        value: houseNo['House no.'],
+                        child: Text(houseNo['House no.']),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (value) {
+                  setState(() {
+                    if (value != null) {
+                      eventsData = [];
+                      debugPrint('selected value......!!!$value');
+                      selectedValue = value.toString();
+                      allEvents(fromCsvMapped, selectedValue!);
+                    }
+                  });
+                },
               ),
-              value: selectedValue,
-              items: fromCsvMapped
-                  .map(
-                    (houseNo) => DropdownMenuItem(
-                      value: houseNo['House no.'],
-                      child: Text(houseNo['House no.']),
-                    ),
-                  )
-                  .toList(),
-              onChanged: (value) {
-                setState(() {
-                  if (value != null) {
-                    eventsData = [];
-                    debugPrint('selected value......!!!$value');
-                    selectedValue = value.toString();
-                    allEvents(fromCsvMapped, selectedValue!);
-                  }
-                });
-              },
             ),
             Expanded(
               child: SfCalendar(
@@ -89,7 +91,6 @@ class _CalenderPageState extends State<CalenderPage> {
                     appointmentTextStyle: TextStyle(
                       color: Colors.white,
                       fontStyle: FontStyle.normal,
-                      decoration: TextDecoration.underline,
                     ),
                   ),
                 ),
@@ -97,36 +98,6 @@ class _CalenderPageState extends State<CalenderPage> {
                 dataSource: DataSource(eventsData),
               ),
             ),
-            // Expanded(
-            //   child: ListView.separated(
-            //     itemCount: appointmentDetails!.length,
-            //     itemBuilder: (context, index) {
-            //       return Container(
-            //         padding: const EdgeInsets.all(5.0),
-            //         child: Card(
-            //           shape: RoundedRectangleBorder(
-            //             borderRadius: BorderRadius.circular(20),
-            //           ),
-            //           child: ListTile(
-            //             leading: Icon(
-            //               Icons.recycling_outlined,
-            //               color: appointmentDetails![index].color,
-            //             ),
-            //             title: Text(
-            //               appointmentDetails![index].subject,
-            //               style: TextStyle(
-            //                 fontSize: 18,
-            //                 color: appointmentDetails![index].color,
-            //               ),
-            //             ),
-            //           ),
-            //         ),
-            //       );
-            //     },
-            //     separatorBuilder: (BuildContext context, int index) =>
-            //         const Divider(height: 5),
-            //   ),
-            // ),
           ],
         ),
       ),
