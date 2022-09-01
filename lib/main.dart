@@ -1,4 +1,4 @@
-import 'package:calender/widgets/calender.dart';
+import 'package:calender/widgets/calender_page.dart';
 import 'package:calender/widgets/calender_sample.dart';
 import 'package:flutter/material.dart';
 
@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primaryColor: Colors.deepOrangeAccent,
       ),
-      home: const CalendarSample(),
+      home: const CalenderPage(),
     );
   }
 }

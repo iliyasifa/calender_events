@@ -34,9 +34,7 @@ class CalendarSampleState extends State<CalendarSample> {
             monthViewSettings: const MonthViewSettings(
               showAgenda: true,
               agendaItemHeight: 50,
-              agendaStyle: AgendaStyle(
-                appointmentTextStyle: TextStyle(),
-              ),
+              agendaStyle: AgendaStyle(appointmentTextStyle: TextStyle()),
             ),
             dataSource: MeetingDataSource(getAppointments()),
           ),

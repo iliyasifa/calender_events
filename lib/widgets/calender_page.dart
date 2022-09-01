@@ -1,7 +1,4 @@
-// import 'package:flutter/cupertino.dart';
-import 'package:calender/widgets/calender_sample.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 import 'package:csv/csv.dart';
 import 'package:flutter/services.dart' show rootBundle;
@@ -72,8 +69,8 @@ class _CalenderPageState extends State<CalenderPage> {
                 ),
                 initialDisplayDate: DateTime.now(),
                 initialSelectedDate: DateTime.now(),
-                // cellBorderColor: Colors.transparent,
-                backgroundColor: Colors.white,
+                cellBorderColor: Colors.transparent,
+                backgroundColor: Colors.transparent,
                 todayTextStyle: const TextStyle(color: Colors.black),
                 viewHeaderStyle: const ViewHeaderStyle(
                   backgroundColor: Colors.white,
@@ -95,7 +92,7 @@ class _CalenderPageState extends State<CalenderPage> {
                   ),
                 ),
                 view: CalendarView.month,
-                dataSource: MeetingDataSource(eventsData),
+                dataSource: DataSource(eventsData),
               ),
             ),
             // Expanded(
@@ -226,5 +223,11 @@ class _CalenderPageState extends State<CalenderPage> {
       return Colors.blue;
     }
     return Colors.black;
+  }
+}
+
+class DataSource extends CalendarDataSource {
+  DataSource(List<Appointment> source) {
+    appointments = source;
   }
 }
