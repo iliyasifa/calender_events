@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
-import 'package:syncfusion_flutter_calendar/calendar.dart';
 import 'package:csv/csv.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 class CalenderPage extends StatefulWidget {
   const CalenderPage({Key? key}) : super(key: key);
@@ -14,11 +14,23 @@ class _CalenderPageState extends State<CalenderPage> {
   List<Appointment> eventsData = [];
   List<Map<String, dynamic>> fromCsvMapped = [];
   String? selectedValue;
+  TextEditingController controller = TextEditingController();
+  List<Appointment> appointmentDetails = <Appointment>[];
 
   @override
   void initState() {
     super.initState();
     loadAsset();
+  }
+
+  void calendarTapped(CalendarTapDetails calendarTapDetails) {
+    if (calendarTapDetails.targetElement == CalendarElement.calendarCell) {
+      setState(() {
+        appointmentDetails =
+            calendarTapDetails.appointments!.cast<Appointment>();
+        // calendarTapDetails.date;
+      });
+    }
   }
 
   @override
@@ -52,7 +64,7 @@ class _CalenderPageState extends State<CalenderPage> {
                   setState(() {
                     if (value != null) {
                       eventsData = [];
-                      debugPrint('selected value......!!!$value');
+                      appointmentDetails = [];
                       selectedValue = value.toString();
                       allEvents(fromCsvMapped, selectedValue!);
                     }
@@ -61,6 +73,7 @@ class _CalenderPageState extends State<CalenderPage> {
               ),
             ),
             Expanded(
+              flex: 2,
               child: SfCalendar(
                 todayHighlightColor: Theme.of(context).primaryColor,
                 selectionDecoration: BoxDecoration(
@@ -70,6 +83,7 @@ class _CalenderPageState extends State<CalenderPage> {
                     width: 2,
                   ),
                 ),
+                onTap: calendarTapped,
                 initialDisplayDate: DateTime.now(),
                 initialSelectedDate: DateTime.now(),
                 cellBorderColor: Colors.transparent,
@@ -84,18 +98,70 @@ class _CalenderPageState extends State<CalenderPage> {
                 ),
                 headerStyle:
                     const CalendarHeaderStyle(textAlign: TextAlign.center),
-                monthViewSettings: const MonthViewSettings(
-                  showAgenda: true,
-                  agendaItemHeight: 50,
-                  agendaStyle: AgendaStyle(
-                    appointmentTextStyle: TextStyle(
-                      color: Colors.white,
-                      fontStyle: FontStyle.normal,
-                    ),
-                  ),
-                ),
+                // monthViewSettings: const MonthViewSettings(
+                //   showAgenda: true,
+                //   agendaItemHeight: 50,
+                // ),
                 view: CalendarView.month,
                 dataSource: DataSource(eventsData),
+              ),
+            ),
+            Expanded(
+              child: ListView.separated(
+                padding: const EdgeInsets.all(2),
+                itemCount: appointmentDetails.length,
+                itemBuilder: (BuildContext context, int index) {
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: appointmentDetails[index].color,
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    padding: const EdgeInsets.all(5.0),
+                    child: ListTile(
+                      leading: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'on',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          Text(
+                            '${appointmentDetails[index].startTime.day}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 24,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                      title: Text(
+                        appointmentDetails[index].subject,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      trailing: const Text(
+                        '9:00 AM',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+                separatorBuilder: (BuildContext context, int index) =>
+                    const Divider(
+                  height: 5,
+                ),
               ),
             ),
           ],
